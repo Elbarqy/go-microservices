@@ -1,25 +1,46 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
 	"log"
+	"microservice/handlers"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("hello world")
-		d, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "oops", http.StatusBadRequest)
-			// w.WriteHeader(http.StatusBadRequest)
-			// w.Write([]byte("Oooopse"))
-			return
-		}
-		// log.Printf("Data %s", d)
-		fmt.Println(w, "Hello %s", d)
-	})
+	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	hh := handlers.NewHello(l)
+	gb := handlers.NewGoodBye(l)
+	sm := http.NewServeMux()
+	sm.Handle("/", hh)
+	sm.Handle("/goodbye", gb)
 
-	http.ListenAndServe("localhost:9090", nil)
+	s := &http.Server{
+		Addr:         "localhost:9090",
+		Handler:      sm,
+		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  1 * time.Second,
+		WriteTimeout: 1 * time.Second,
+	}
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil {
+			l.Fatal(err)
+		}
+	}()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
+
+	// Block until a signal is received.
+	sig := <-c
+	log.Println("Got signal:", sig)
+	ctx, err := context.WithTimeout(context.Background(), 30*time.Second)
+	if err != nil {
+
+	}
+	s.Shutdown(ctx)
 }
