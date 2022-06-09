@@ -14,10 +14,11 @@ func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
 	hh := handlers.NewHello(l)
 	gb := handlers.NewGoodBye(l)
+	ph := handlers.NewProducts(l)
 	sm := http.NewServeMux()
 	sm.Handle("/", hh)
 	sm.Handle("/goodbye", gb)
-
+	sm.Handle("/products", ph)
 	s := &http.Server{
 		Addr:         "localhost:9090",
 		Handler:      sm,
@@ -40,7 +41,7 @@ func main() {
 	log.Println("Got signal:", sig)
 	ctx, err := context.WithTimeout(context.Background(), 30*time.Second)
 	if err != nil {
-
+		l.Println(err)
 	}
 	s.Shutdown(ctx)
 }
