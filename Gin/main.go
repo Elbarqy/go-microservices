@@ -26,6 +26,7 @@ func main() {
 	v1 := router.Group("/api")
 	imageGroup := v1.Group("/images")
 	v2 := v1.Group("/user")
+	v3 := router.Group("/files") //Static , StaticFS, StaticFile
 	v2.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Hello world")
 	})
@@ -56,5 +57,7 @@ func main() {
 		text := ctx.PostForm("text")
 		ctx.String(http.StatusOK, text)
 	})
+
+	v3.Static("/assets", "./assets") //localhost:3000/assets/test.jpg
 	log.Fatalln(router.Run(address))
 }
